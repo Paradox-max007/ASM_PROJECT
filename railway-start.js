@@ -4,13 +4,13 @@ const fs = require('fs');
 
 console.log('=== ASM Railway Startup ===');
 
-// Step 0: Switch to PostgreSQL provider for Railway
-console.log('Switching Prisma to PostgreSQL provider...');
+// Step 0: Auto-detect DB provider from DATABASE_URL
+console.log('Auto-detecting Prisma provider from DATABASE_URL...');
 try {
-  execSync('node scripts/switch-db.js postgresql', { stdio: 'inherit' });
-  console.log('Successfully switched to PostgreSQL provider');
+  execSync('node scripts/switch-db.js', { stdio: 'inherit' });
+  console.log('Successfully switched Prisma provider');
 } catch (e) {
-  console.error('Warning: switch-db failed (schema may already be postgresql):', e.message);
+  console.error('Warning: switch-db failed:', e.message);
 }
 
 // Step 1: Push database schema
