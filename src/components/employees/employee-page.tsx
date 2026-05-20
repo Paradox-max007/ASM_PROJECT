@@ -12,7 +12,7 @@ import {
   StarHalf,
   X,
   Loader2,
-  Download,
+  FileDown,
   MessageCircle,
   ChevronLeft,
   ChevronRight,
@@ -35,6 +35,7 @@ import {
   Upload,
   ImagePlus,
   Crown,
+  UserX,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -331,8 +332,8 @@ function EmployeeAvatar({ name, photo }: { name: string; photo?: string | null }
   }
 
   return (
-    <div className="h-9 w-9 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-      <span className="text-sm font-semibold text-blue-400">{initials}</span>
+    <div className="h-9 w-9 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0">
+      <span className="text-sm font-semibold text-white">{initials}</span>
     </div>
   );
 }
@@ -880,7 +881,15 @@ export function EmployeePage() {
         setFormDialogOpen(false);
         fetchEmployees();
       } else {
-        toast({ title: 'Error', description: json.error || 'Operation failed', variant: 'destructive' });
+        // Check for site assignment errors and provide clearer messaging
+        const errorMsg = json.error || 'Operation failed';
+        if (errorMsg.includes('inactive') || errorMsg.includes('does not exist')) {
+          toast({ title: 'Site Assignment Error', description: errorMsg, variant: 'destructive' });
+        } else if (errorMsg.includes('team leader') || errorMsg.includes('Team Leader')) {
+          toast({ title: 'Team Leader Conflict', description: errorMsg, variant: 'destructive' });
+        } else {
+          toast({ title: 'Error', description: errorMsg, variant: 'destructive' });
+        }
       }
     } catch {
       toast({ title: 'Error', description: 'Something went wrong', variant: 'destructive' });
@@ -939,19 +948,19 @@ export function EmployeePage() {
 
   const handleWhatsApp = async (employee: Employee) => {
     try {
-      // Generate the employee PDF
-      const doc = generateEmployeePDF(employee, false);
-      const fileName = `${employee.fullName.replace(/\s+/g, '_')}_${employee.employeeId}.pdf`;
+      // Generate the employee PDF (same as Download CV)
+      const doc = generateEmployeePDF(employee, true);
+      const fileName = `CV_${employee.fullName.replace(/\s+/g, '_')}_${employee.employeeId}.pdf`;
 
-      // Download the PDF
+      // Download the PDF to the user's device
       doc.save(fileName);
 
       // Open WhatsApp without a phone number so the user picks a contact
-      window.open('https://wa.me/', '_blank');
+      window.open('https://wa.me/?text=Employee+details+attached', '_blank');
 
       toast({
         title: 'PDF Downloaded',
-        description: `Employee details PDF saved. Share it via WhatsApp by attaching the downloaded file.`,
+        description: 'PDF downloaded. Open WhatsApp to share the file.',
       });
     } catch {
       toast({ title: 'Error', description: 'Failed to generate PDF', variant: 'destructive' });
@@ -1029,7 +1038,7 @@ export function EmployeePage() {
                 size="icon"
                 className={
                   p === page
-                    ? 'h-8 w-8 bg-blue-500 hover:bg-blue-600 text-white'
+                    ? 'h-8 w-8 bg-white hover:bg-slate-200 text-slate-900'
                     : 'h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-700'
                 }
                 onClick={() => setPage(p)}
@@ -1075,7 +1084,7 @@ export function EmployeePage() {
         </div>
         <Button
           onClick={openAddDialog}
-          className="bg-blue-500 hover:bg-blue-600 text-white gap-2 self-start"
+          className="bg-white hover:bg-slate-200 text-slate-900 gap-2 self-start"
         >
           <Plus className="h-4 w-4" />
           Add Employee
@@ -1172,6 +1181,16 @@ export function EmployeePage() {
                                   Team Leader
                                 </Badge>
                               )}
+                              {!emp.currentSite ? (
+                                <Badge className="bg-slate-500/15 text-slate-400 border-slate-500/25 text-[10px] px-1.5 py-0 shrink-0">
+                                  <UserX className="h-2.5 w-2.5 mr-0.5" />
+                                  Idle / No Site
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] px-1.5 py-0 shrink-0">
+                                  {emp.currentSite}
+                                </Badge>
+                              )}
                             </div>
                             {emp.nationality && (
                               <p className="text-xs text-slate-500">{emp.nationality}</p>
@@ -1214,7 +1233,7 @@ export function EmployeePage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10"
+                            className="h-8 w-8 text-slate-400 hover:text-white hover:bg-white/10"
                             onClick={() => openDetailsDialog(emp)}
                             title="View"
                           >
@@ -1268,6 +1287,16 @@ export function EmployeePage() {
                               Team Leader
                             </Badge>
                           )}
+                          {!emp.currentSite ? (
+                            <Badge className="bg-slate-500/15 text-slate-400 border-slate-500/25 text-[10px] px-1.5 py-0 shrink-0">
+                              <UserX className="h-2.5 w-2.5 mr-0.5" />
+                              Idle / No Site
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] px-1.5 py-0 shrink-0">
+                              {emp.currentSite}
+                            </Badge>
+                          )}
                         </div>
                         <p className="text-xs text-slate-500 font-mono">{emp.employeeId}</p>
                         {emp.isTeamLeader && emp.teamLeaderSiteId && (() => {
@@ -1302,7 +1331,7 @@ export function EmployeePage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-slate-400 hover:text-blue-400"
+                        className="h-8 w-8 text-slate-400 hover:text-white"
                         onClick={() => openDetailsDialog(emp)}
                       >
                         <Eye className="h-4 w-4" />
@@ -1397,10 +1426,10 @@ export function EmployeePage() {
                           const file = e.dataTransfer.files[0];
                           if (file) handlePhotoUpload(file);
                         }}
-                        className="h-24 w-24 rounded-xl border-2 border-dashed border-slate-600 bg-slate-900/50 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500/50 hover:bg-slate-800/50 transition-colors gap-1"
+                        className="h-24 w-24 rounded-xl border-2 border-dashed border-slate-600 bg-slate-900/50 flex flex-col items-center justify-center cursor-pointer hover:border-white/30 hover:bg-slate-800/50 transition-colors gap-1"
                       >
                         {isProcessingImage ? (
-                          <Loader2 className="h-6 w-6 text-blue-400 animate-spin" />
+                          <Loader2 className="h-6 w-6 text-white animate-spin" />
                         ) : (
                           <>
                             <Camera className="h-6 w-6 text-slate-500" />
@@ -1463,13 +1492,14 @@ export function EmployeePage() {
                     <Label className="text-slate-300 text-sm">Employee ID <span className="text-slate-500 text-xs">(auto-generated)</span></Label>
                     <Input
                       placeholder="Auto-generated on save"
-                      value={formData.employeeId}
+                      value={formMode === 'add' ? 'Auto-generated on save' : formData.employeeId}
                       onChange={(e) => handleFormChange('employeeId', e.target.value)}
-                      className="bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 font-mono"
-                      disabled={!editingEmployee}
+                      className="bg-slate-900 border-slate-600 text-slate-400 placeholder:text-slate-500 font-mono"
+                      disabled={formMode === 'add'}
+                      readOnly={formMode === 'add'}
                     />
-                    {!editingEmployee && (
-                      <p className="text-[10px] text-slate-500">Employee ID is auto-assigned when creating a new employee</p>
+                    {formMode === 'add' && (
+                      <p className="text-[10px] text-slate-500">Employee ID is auto-assigned in ASM-YYYY-NNN format when creating a new employee</p>
                     )}
                   </div>
 
@@ -1802,7 +1832,7 @@ export function EmployeePage() {
               {formTab === 'personal' ? (
                 <Button
                   onClick={() => setFormTab('professional')}
-                  className="bg-blue-500 hover:bg-blue-600 text-white"
+                  className="bg-white hover:bg-slate-200 text-slate-900"
                 >
                   Next
                 </Button>
@@ -1810,7 +1840,7 @@ export function EmployeePage() {
                 <Button
                   onClick={handleSubmit}
                   disabled={isSubmitting || !formData.fullName.trim()}
-                  className="bg-blue-500 hover:bg-blue-600 text-white"
+                  className="bg-white hover:bg-slate-200 text-slate-900"
                 >
                   {isSubmitting ? (
                     <>
@@ -1840,7 +1870,7 @@ export function EmployeePage() {
               <div className="px-6 pt-6 pb-4 bg-gradient-to-r from-slate-800 to-slate-800/80">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="h-14 w-14 rounded-xl bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                    <div className="h-14 w-14 rounded-xl bg-slate-700 flex items-center justify-center flex-shrink-0">
                       {viewingEmployee.photo ? (
                         <img
                           src={viewingEmployee.photo}
@@ -1848,7 +1878,7 @@ export function EmployeePage() {
                           className="h-full w-full rounded-xl object-cover"
                         />
                       ) : (
-                        <span className="text-lg font-bold text-blue-400">
+                        <span className="text-lg font-bold text-white">
                           {viewingEmployee.fullName.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()}
                         </span>
                       )}
@@ -1906,7 +1936,7 @@ export function EmployeePage() {
                   {/* Personal Information */}
                   <div>
                     <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                      <User className="h-4 w-4 text-blue-400" />
+                      <User className="h-4 w-4 text-slate-400" />
                       Personal Information
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1934,7 +1964,7 @@ export function EmployeePage() {
                   {/* Professional Information */}
                   <div>
                     <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                      <Briefcase className="h-4 w-4 text-blue-400" />
+                      <Briefcase className="h-4 w-4 text-slate-400" />
                       Professional Information
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1991,7 +2021,7 @@ export function EmployeePage() {
                   {/* Document Details */}
                   <div>
                     <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                      <Shield className="h-4 w-4 text-blue-400" />
+                      <Shield className="h-4 w-4 text-slate-400" />
                       Document Details
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -2074,21 +2104,19 @@ export function EmployeePage() {
               {/* Footer Actions */}
               <div className="px-6 py-4 border-t border-slate-700/50 bg-slate-800/80 flex flex-wrap items-center gap-2">
                 <Button
-                  variant="ghost"
-                  className="text-slate-400 hover:text-white hover:bg-slate-700 gap-1.5"
-                  onClick={() => handleWhatsApp(viewingEmployee)}
-                >
-                  <MessageCircle className="h-4 w-4 text-green-400" />
-                  WhatsApp
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="text-slate-400 hover:text-green-400 hover:bg-green-500/10 gap-1.5"
+                  className="bg-white hover:bg-slate-200 text-black gap-1.5"
                   onClick={() => viewingEmployee && handleDownloadCV(viewingEmployee)}
                   title="Download CV"
                 >
-                  <Download className="h-4 w-4" />
+                  <FileDown className="h-4 w-4" />
                   Download CV
+                </Button>
+                <Button
+                  className="bg-white hover:bg-slate-200 text-black gap-1.5"
+                  onClick={() => handleWhatsApp(viewingEmployee)}
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Share via WhatsApp
                 </Button>
                 <div className="flex-1" />
                 <Button

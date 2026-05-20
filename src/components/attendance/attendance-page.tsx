@@ -115,12 +115,11 @@ function getRelativeDateLabel(day: number, month: number, year: number): string 
 const STATUS_CONFIG: Record<StatusOption, { label: string; short: string; color: string; dotColor: string }> = {
   present: { label: 'Present', short: 'P', color: 'bg-green-500/20 text-green-400', dotColor: 'bg-green-500' },
   absent: { label: 'Absent', short: 'A', color: 'bg-red-500/20 text-red-400', dotColor: 'bg-red-500' },
-  no_site: { label: 'No Site', short: 'NS', color: 'bg-amber-500/20 text-amber-400', dotColor: 'bg-amber-500' },
-  overtime: { label: 'Overtime', short: 'O', color: 'bg-blue-500/20 text-blue-400', dotColor: 'bg-blue-500' },
-  not_marked: { label: 'Not Marked', short: '-', color: 'bg-slate-600/20 text-slate-500', dotColor: 'bg-slate-600' },
+  overtime: { label: 'Overtime', short: 'O', color: 'bg-white/15 text-white border border-white/20', dotColor: 'bg-white' },
+  no_site: { label: 'No Site', short: 'NS', color: 'bg-slate-500/20 text-slate-300', dotColor: 'bg-slate-400' },
 };
 
-const STATUS_OPTIONS: StatusOption[] = ['present', 'absent', 'no_site', 'overtime', 'not_marked'];
+const STATUS_OPTIONS: StatusOption[] = ['present', 'absent', 'overtime', 'no_site'];
 
 /* ───────── Status Dropdown ───────── */
 interface StatusDropdownProps {
@@ -188,7 +187,7 @@ function StatusDropdown({
               <span className={cn('h-2.5 w-2.5 rounded-full shrink-0', cfg.dotColor)} />
               <span>{cfg.label}</span>
               {selectedStatus === status && (
-                <Check className="ml-auto h-3.5 w-3.5 text-blue-400" />
+                <Check className="ml-auto h-3.5 w-3.5 text-white" />
               )}
             </button>
           );
@@ -212,7 +211,7 @@ function StatusDropdown({
         <Button
           onClick={handleConfirm}
           size="sm"
-          className="w-full h-8 bg-blue-500 hover:bg-blue-600 text-white text-xs"
+          className="w-full h-8 bg-white hover:bg-gray-200 text-black text-xs font-medium"
         >
           Save
         </Button>
@@ -283,8 +282,8 @@ function SearchableEmployeeSelect({
                 {selectedEmployee.currentSite}
               </Badge>
             ) : (
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-amber-500/15 text-amber-400 border-amber-500/25 shrink-0">
-                Idle
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-slate-500/15 text-slate-400 border-slate-500/25 shrink-0">
+                No Site
               </Badge>
             )}
           </div>
@@ -342,8 +341,8 @@ function SearchableEmployeeSelect({
                       {emp.currentSite}
                     </Badge>
                   ) : (
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-amber-500/15 text-amber-400 border-amber-500/25 shrink-0">
-                      Idle
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-slate-500/15 text-slate-400 border-slate-500/25 shrink-0">
+                      No Site
                     </Badge>
                   )}
                 </button>
@@ -503,8 +502,8 @@ function ListView({
                         {emp.currentSite}
                       </Badge>
                     ) : (
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-amber-500/15 text-amber-400 border-amber-500/25">
-                        Idle
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-slate-500/15 text-slate-400 border-slate-500/25">
+                        No Site
                       </Badge>
                     )}
                   </div>
@@ -551,7 +550,7 @@ function ListView({
                   </div>
                   <div className="w-16 shrink-0 text-center py-2.5 px-2">
                     {totalOT > 0 ? (
-                      <span className="text-xs font-medium text-blue-400">{totalOT}h</span>
+                      <span className="text-xs font-medium text-white">{totalOT}h</span>
                     ) : (
                       <span className="text-xs text-slate-600">&mdash;</span>
                     )}
@@ -701,8 +700,8 @@ function CalendarView({
                     {selectedEmployee.currentSite}
                   </Badge>
                 ) : (
-                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-amber-500/15 text-amber-400 border-amber-500/25">
-                    Idle
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-slate-500/15 text-slate-400 border-slate-500/25">
+                    No Site
                   </Badge>
                 )}
               </div>
@@ -795,7 +794,7 @@ function CalendarView({
                         </button>
                       )}
                       {status === 'overtime' && record?.overtimeHours && (
-                        <span className="text-[10px] text-blue-400 mt-0.5 text-center">
+                        <span className="text-[10px] text-white mt-0.5 text-center font-medium">
                           {record.overtimeHours}h
                         </span>
                       )}

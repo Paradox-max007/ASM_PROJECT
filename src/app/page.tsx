@@ -23,58 +23,79 @@ type AppState = 'checking' | 'needs_setup' | 'unauthenticated' | 'authenticated'
 
 function LoadingScreen() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-900">
+    <div className="flex min-h-screen items-center justify-center bg-black">
       <div className="flex flex-col items-center gap-6 w-full max-w-sm px-4">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-14 w-14 rounded-2xl bg-blue-500 shadow-lg shadow-blue-500/25 flex items-center justify-center">
-            <span className="text-2xl font-bold text-white">A</span>
+          <div className="h-14 w-14 rounded-2xl bg-white shadow-lg shadow-white/10 flex items-center justify-center">
+            <span className="text-2xl font-bold text-black">A</span>
           </div>
-          <Skeleton className="h-7 w-24 bg-slate-800" />
-          <Skeleton className="h-4 w-48 bg-slate-800" />
+          <Skeleton className="h-7 w-24 bg-zinc-800" />
+          <Skeleton className="h-4 w-48 bg-zinc-800" />
         </div>
-        <div className="w-full bg-slate-800/50 rounded-xl border border-slate-700/50 p-6 space-y-4">
-          <Skeleton className="h-5 w-32 mx-auto bg-slate-700" />
-          <Skeleton className="h-4 w-48 mx-auto bg-slate-700" />
+        <div className="w-full bg-zinc-900/50 rounded-xl border border-zinc-800 p-6 space-y-4">
+          <Skeleton className="h-5 w-32 mx-auto bg-zinc-800" />
+          <Skeleton className="h-4 w-48 mx-auto bg-zinc-800" />
           <div className="space-y-3 pt-2">
-            <Skeleton className="h-4 w-20 bg-slate-700" />
-            <Skeleton className="h-11 w-full rounded-md bg-slate-700" />
-            <Skeleton className="h-4 w-20 bg-slate-700" />
-            <Skeleton className="h-11 w-full rounded-md bg-slate-700" />
+            <Skeleton className="h-4 w-20 bg-zinc-800" />
+            <Skeleton className="h-11 w-full rounded-md bg-zinc-800" />
+            <Skeleton className="h-4 w-20 bg-zinc-800" />
+            <Skeleton className="h-11 w-full rounded-md bg-zinc-800" />
           </div>
-          <Skeleton className="h-11 w-full rounded-md bg-slate-700" />
+          <Skeleton className="h-11 w-full rounded-md bg-zinc-800" />
         </div>
       </div>
     </div>
   );
 }
 
-// Views that admin users can access (dashboard + uniform_registry)
-const ADMIN_ALLOWED_VIEWS: AppView[] = ['dashboard', 'uniform_registry'];
+// Views that admin users can access by default (dashboard + uniform_registry)
+const ADMIN_DEFAULT_VIEWS: AppView[] = ['dashboard', 'uniform_registry'];
 
-// Views that only super_admin can access
-const SUPER_ADMIN_ONLY_VIEWS: AppView[] = ['employees', 'sites', 'attendance', 'leave_requests', 'cancellation_requests', 'notifications', 'admins'];
-
-function isViewAllowedForRole(role: string | undefined, view: AppView): boolean {
-  if (role === 'super_admin') return true;
-  if (role === 'admin') return ADMIN_ALLOWED_VIEWS.includes(view);
-  return false;
-}
+// Views that only super_admin can access by default (require explicit permission for admin)
+const RESTRICTED_VIEWS: AppView[] = ['employees', 'sites', 'attendance', 'leave_requests', 'cancellation_requests', 'notifications', 'admins'];
 
 function MainLayout() {
   const { currentView, setCurrentView } = useAppStore();
   const { user } = useAuthStore();
   const isMobile = useIsMobile();
+  const [adminPermissions, setAdminPermissions] = useState<string[]>([]);
+
+  // Fetch admin menu permissions for admin role
+  React.useEffect(() => {
+    if (!user || user.role === 'super_admin') return;
+
+    const fetchPermissions = async () => {
+      try {
+        const res = await fetch(`/api/menu-permissions?userId=${user.id}`);
+        const data = await res.json();
+        if (data.success) {
+          setAdminPermissions(data.data.allowedMenus || []);
+        }
+      } catch {
+        // silent
+      }
+    };
+    fetchPermissions();
+  }, [user]);
+
+  // Check if a view is allowed for the current user
+  const isViewAllowed = React.useCallback((view: AppView): boolean => {
+    if (user?.role === 'super_admin') return true;
+    if (ADMIN_DEFAULT_VIEWS.includes(view)) return true;
+    if (adminPermissions.includes(view)) return true;
+    return false;
+  }, [user, adminPermissions]);
 
   // Redirect admin users away from restricted views
   React.useEffect(() => {
-    if (user && !isViewAllowedForRole(user.role, currentView)) {
+    if (user && !isViewAllowed(currentView)) {
       setCurrentView('dashboard');
     }
-  }, [user, currentView, setCurrentView]);
+  }, [user, currentView, setCurrentView, isViewAllowed]);
 
   const renderView = () => {
     // Block admin users from accessing restricted views
-    if (user && !isViewAllowedForRole(user.role, currentView)) {
+    if (user && !isViewAllowed(currentView)) {
       return <DashboardPage />;
     }
 
@@ -103,7 +124,7 @@ function MainLayout() {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-900">
+    <div className="flex min-h-screen bg-black dark:bg-black">
       <AppSidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <AppHeader />
@@ -130,6 +151,17 @@ export default function Home() {
   }, [user, hasUsers]);
 
   const appState = resolveState();
+
+  // Apply theme class from user preference
+  useEffect(() => {
+    if (user?.theme) {
+      if (user.theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+  }, [user?.theme]);
 
   useEffect(() => {
     if (hasChecked.current) return;

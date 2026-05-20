@@ -3,13 +3,13 @@
   "version": "0.2.0",
   "private": true,
   "scripts": {
-    "dev": "node scripts/switch-db.js sqlite && npx prisma generate && next dev -p 3000 2>&1 | tee dev.log",
+    "dev": "npx prisma generate && next dev -p 3000 2>&1 | tee dev.log",
     "build": "npx prisma generate && next build",
     "start": "node railway-start.js",
     "lint": "eslint .",
     "postinstall": "npx prisma generate",
     "db:push": "prisma db push",
-    "db:push:pg": "node scripts/switch-db.js postgresql && prisma db push",
+    "db:push:pg": "prisma db push",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset"

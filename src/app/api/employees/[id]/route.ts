@@ -23,12 +23,15 @@ export async function GET(
       where: { id },
       include: {
         attendance: {
+          where: { isHidden: false },
           orderBy: { date: 'desc' },
         },
         warnings: {
+          where: { isHidden: false },
           orderBy: { createdAt: 'desc' },
         },
         fines: {
+          where: { isHidden: false },
           orderBy: { createdAt: 'desc' },
         },
       },
@@ -244,35 +247,55 @@ export async function DELETE(
       },
     });
 
-    // Mark all uniform registry records for this employee as deleted
+    // Soft-hide all related records instead of deleting them
+    // Mark all attendance records for this employee as hidden
+    await db.attendance.updateMany({
+      where: { employeeId: id },
+      data: { isHidden: true },
+    });
+
+    // Mark all warnings for this employee as hidden
+    await db.warning.updateMany({
+      where: { employeeId: id },
+      data: { isHidden: true },
+    });
+
+    // Mark all fines for this employee as hidden
+    await db.fine.updateMany({
+      where: { employeeId: id },
+      data: { isHidden: true },
+    });
+
+    // Mark all leave requests for this employee as hidden
+    await db.leaveRequest.updateMany({
+      where: { employeeId: id },
+      data: { isHidden: true },
+    });
+
+    // Mark all cancellation requests for this employee as hidden
+    await db.cancellationRequest.updateMany({
+      where: { employeeId: id },
+      data: { isHidden: true },
+    });
+
+    // Mark all uniform registry records for this employee as hidden and deleted
     await db.uniformRegistry.updateMany({
       where: { employeeId: id, isDeleted: false },
-      data: { isDeleted: true },
+      data: { isDeleted: true, isHidden: true },
     });
 
-    // Delete all attendance records for this employee (they have cascade, but let's be explicit)
-    await db.attendance.deleteMany({
-      where: { employeeId: id },
-    });
-
-    // Delete all warnings for this employee
-    await db.warning.deleteMany({
-      where: { employeeId: id },
-    });
-
-    // Delete all fines for this employee
-    await db.fine.deleteMany({
-      where: { employeeId: id },
-    });
-
-    // Delete all leave requests for this employee
-    await db.leaveRequest.deleteMany({
-      where: { employeeId: id },
-    });
-
-    // Delete all cancellation requests for this employee
-    await db.cancellationRequest.deleteMany({
-      where: { employeeId: id },
+    // Mark notifications that reference this employee as hidden
+    // Search by employee name and employee ID in title/message
+    await db.notification.updateMany({
+      where: {
+        OR: [
+          { title: { contains: existing.fullName, mode: 'insensitive' } },
+          { message: { contains: existing.fullName, mode: 'insensitive' } },
+          { title: { contains: existing.employeeId, mode: 'insensitive' } },
+          { message: { contains: existing.employeeId, mode: 'insensitive' } },
+        ],
+      },
+      data: { isHidden: true },
     });
 
     return NextResponse.json({

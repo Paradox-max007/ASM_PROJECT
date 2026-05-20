@@ -7,6 +7,7 @@ export interface UserSession {
   email: string;
   name: string;
   role: UserRole;
+  theme: string;
 }
 
 interface AuthState {

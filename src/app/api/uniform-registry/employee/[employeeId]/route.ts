@@ -22,6 +22,7 @@ export async function GET(
       where: {
         employeeId,
         isDeleted: false,
+        isHidden: false,
       },
       orderBy: { createdAt: 'desc' },
       include: {

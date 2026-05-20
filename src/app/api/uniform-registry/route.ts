@@ -21,8 +21,8 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit;
     const groupByEmployee = searchParams.get('groupByEmployee') !== 'false'; // default true
 
-    // Build where clause - always exclude deleted records
-    const where: Record<string, unknown> = { isDeleted: false };
+    // Build where clause - always exclude deleted and hidden records
+    const where: Record<string, unknown> = { isDeleted: false, isHidden: false };
 
     if (search) {
       const orConditions: Record<string, unknown>[] = [

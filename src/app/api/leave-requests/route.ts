@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
     const employeeId = searchParams.get('employeeId');
 
     const where: Record<string, unknown> = {
+      isHidden: false,
       employee: {
         status: { not: 'deleted' },
       },

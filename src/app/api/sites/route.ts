@@ -1,18 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const searchParams = request.nextUrl.searchParams;
+    const employeeCountSite = searchParams.get('employeeCount');
+
+    // If employeeCount query param is provided, return count for that specific site
+    if (employeeCountSite) {
+      const count = await db.employee.count({
+        where: {
+          currentSite: employeeCountSite,
+          status: { not: 'deleted' },
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          siteName: employeeCountSite,
+          employeeCount: count,
+        },
+      });
+    }
+
     const sites = await db.site.findMany({
       select: { id: true, name: true, clientName: true, projectName: true, isActive: true, createdAt: true },
       orderBy: { name: 'asc' },
     });
 
-    // Get employee counts per site
+    // Get active site names for filtering
+    const activeSiteNames = sites.filter(s => s.isActive).map(s => s.name);
+
+    // Get employee counts per site - only count employees at active sites who are not deleted
     const employeesBySite = await db.employee.groupBy({
       by: ['currentSite'],
       where: {
-        currentSite: { not: null },
+        currentSite: { not: null, in: activeSiteNames },
         status: { not: 'deleted' },
       },
       _count: {

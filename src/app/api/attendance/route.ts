@@ -88,6 +88,7 @@ export async function GET(request: NextRequest) {
         gte: startDate,
         lt: endDate,
       },
+      isHidden: false,
       employee: {
         status: { not: 'deleted' },
       },
@@ -100,11 +101,15 @@ export async function GET(request: NextRequest) {
     // Auto-create attendance records for employees without records
     // - "no_site" for idle employees (no site assigned)
     // - "present" for employees with a site assignment
+    // Only auto-create for past/current dates (not future dates)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const isFutureMonth = (year > today.getFullYear()) || (year === today.getFullYear() && month > today.getMonth() + 1);
     const maxDay = (year === today.getFullYear() && month === today.getMonth() + 1)
       ? today.getDate()
-      : new Date(year, month, 0).getDate();
+      : isFutureMonth
+        ? 0 // Don't auto-create for future months
+        : new Date(year, month, 0).getDate();
 
     if (maxDay > 0) {
       // Find all active employees (not deleted)

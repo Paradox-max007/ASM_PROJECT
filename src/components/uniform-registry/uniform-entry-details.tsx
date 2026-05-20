@@ -106,6 +106,7 @@ interface Props {
   entry: UniformEntry;
   onBack: () => void;
   onRenew?: (entry: UniformEntry) => void;
+  autoOpenAdd?: boolean;
 }
 
 /* ───────── Helpers ───────── */
@@ -152,7 +153,7 @@ function calculateRenewalDate(createdDate: string): string {
 
 /* ───────── Main Component ───────── */
 
-export function UniformEntryDetails({ entry, onBack, onRenew }: Props) {
+export function UniformEntryDetails({ entry, onBack, onRenew, autoOpenAdd }: Props) {
   const [allEntries, setAllEntries] = useState<UniformEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState<string>('');
@@ -188,6 +189,13 @@ export function UniformEntryDetails({ entry, onBack, onRenew }: Props) {
     }
     return [];
   }, [entry.employeeId]);
+
+  // Auto-open add form if requested
+  useEffect(() => {
+    if (autoOpenAdd) {
+      setShowAddForm(true);
+    }
+  }, [autoOpenAdd]);
 
   useEffect(() => {
     const load = async () => {
@@ -395,7 +403,7 @@ export function UniformEntryDetails({ entry, onBack, onRenew }: Props) {
         </div>
         <Button
           onClick={() => setShowAddForm(true)}
-          className="gap-1.5 bg-emerald-600 text-white hover:bg-emerald-700 font-semibold"
+          className="gap-1.5 bg-white text-black hover:bg-gray-200 font-semibold"
         >
           <Plus className="h-4 w-4" />
           Add Entry
@@ -407,6 +415,14 @@ export function UniformEntryDetails({ entry, onBack, onRenew }: Props) {
         <Card className="bg-slate-800/50 border-emerald-500/30 p-4">
           <h3 className="text-sm font-bold text-emerald-400 uppercase mb-3">Add New Entry</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div>
+              <label className="text-[10px] text-slate-500 uppercase block mb-1">Employee</label>
+              <Input
+                value={`${entry.employeeName} (${entry.employeeId})`}
+                disabled
+                className="h-8 text-xs bg-slate-900 border-slate-600 text-slate-400"
+              />
+            </div>
             <div>
               <label className="text-[10px] text-slate-500 uppercase block mb-1">Token # (auto if empty)</label>
               <Input
@@ -437,13 +453,14 @@ export function UniformEntryDetails({ entry, onBack, onRenew }: Props) {
               />
             </div>
             <div>
-              <label className="text-[10px] text-slate-500 uppercase block mb-1">Created Date (YYYY-MM-DD)</label>
+              <label className="text-[10px] text-slate-500 uppercase block mb-1">Created Date</label>
               <Input
                 type="date"
                 value={newEntry.createdAt}
                 onChange={(e) => setNewEntry(prev => ({ ...prev, createdAt: e.target.value }))}
                 className="h-8 text-xs bg-slate-900 border-slate-600 text-slate-200"
               />
+              <p className="text-[9px] text-slate-500 mt-0.5">Format: YYYY-MM-DD</p>
               {newEntry.createdAt && (
                 <p className="text-[9px] text-amber-400 mt-0.5">Expiry: {formatDateShort(calculateRenewalDate(newEntry.createdAt))}</p>
               )}
@@ -483,7 +500,7 @@ export function UniformEntryDetails({ entry, onBack, onRenew }: Props) {
             </div>
           </div>
           <div className="flex gap-2 mt-3">
-            <Button size="sm" onClick={handleAddEntry} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+            <Button size="sm" onClick={handleAddEntry} disabled={saving} className="bg-white hover:bg-gray-200 text-black">
               {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Check className="h-3.5 w-3.5 mr-1" />}
               Save Entry
             </Button>
@@ -666,7 +683,7 @@ export function UniformEntryDetails({ entry, onBack, onRenew }: Props) {
                               );
                             }
                             return checked ? (
-                              <Badge key={key} className="bg-blue-500/15 text-blue-400 text-[9px] px-1 py-0 border border-blue-500/25">
+                              <Badge key={key} className="bg-white/15 text-white text-[9px] px-1 py-0 border border-white/25">
                                 {ITEM_LABELS[key]}
                               </Badge>
                             ) : null;
@@ -682,7 +699,7 @@ export function UniformEntryDetails({ entry, onBack, onRenew }: Props) {
                               onChange={(e) => setEditData(prev => ({ ...prev, createdAt: e.target.value }))}
                               className="h-7 text-[10px] bg-slate-900 border-slate-600 text-slate-200"
                             />
-                            <span className="text-[8px] text-slate-500">YYYY-MM-DD</span>
+                            <span className="text-[8px] text-slate-500">Format: YYYY-MM-DD</span>
                           </div>
                         ) : (
                           <span className="text-slate-400 text-[10px]">{formatDateShort(entryItem.createdAt)}</span>
@@ -733,7 +750,7 @@ export function UniformEntryDetails({ entry, onBack, onRenew }: Props) {
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => startEdit(entryItem)}
-                                className="h-7 w-7 p-0 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10"
+                                className="h-7 w-7 p-0 text-slate-400 hover:text-white hover:bg-slate-500/10"
                                 title="Edit"
                               >
                                 <Edit2 className="h-3.5 w-3.5" />

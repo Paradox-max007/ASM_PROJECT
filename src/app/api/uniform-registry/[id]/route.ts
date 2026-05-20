@@ -33,7 +33,7 @@ export async function GET(
       },
     });
 
-    if (!entry || entry.isDeleted) {
+    if (!entry || entry.isDeleted || entry.isHidden) {
       return NextResponse.json(
         { success: false, error: 'Uniform registry entry not found' },
         { status: 404 }
@@ -70,7 +70,7 @@ export async function PUT(
 
     // Check if entry exists
     const existing = await db.uniformRegistry.findUnique({ where: { id } });
-    if (!existing || existing.isDeleted) {
+    if (!existing || existing.isDeleted || existing.isHidden) {
       return NextResponse.json(
         { success: false, error: 'Uniform registry entry not found' },
         { status: 404 }
@@ -161,7 +161,7 @@ export async function DELETE(
 
     // Check if entry exists
     const existing = await db.uniformRegistry.findUnique({ where: { id } });
-    if (!existing || existing.isDeleted) {
+    if (!existing || existing.isDeleted || existing.isHidden) {
       return NextResponse.json(
         { success: false, error: 'Uniform registry entry not found' },
         { status: 404 }

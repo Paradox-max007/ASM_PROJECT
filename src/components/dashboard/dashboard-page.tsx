@@ -336,8 +336,8 @@ export function DashboardPage() {
       title: 'Total Employees',
       value: loadingEmployees ? null : (totalEmployees ?? 0),
       icon: Users,
-      color: 'text-blue-400',
-      bgColor: 'bg-blue-500/10',
+      color: 'text-white',
+      bgColor: 'bg-slate-500/10',
       subtitle: null,
     },
     {
@@ -537,7 +537,7 @@ export function DashboardPage() {
                   <Bar dataKey="present" name="Present" fill="#22c55e" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="absent" name="Absent" fill="#ef4444" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="noSite" name="No Site / Idle" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="overtime" name="Overtime" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="overtime" name="Overtime" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -643,6 +643,7 @@ export function DashboardPage() {
                     <TableHead className="text-slate-400 font-semibold">Site Name</TableHead>
                     <TableHead className="text-slate-400 font-semibold text-center">Employee Count</TableHead>
                     <TableHead className="text-slate-400 font-semibold text-center">Status</TableHead>
+                    <TableHead className="text-slate-400 font-semibold text-right">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -691,6 +692,17 @@ export function DashboardPage() {
                               })}
                             </div>
                           )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-slate-400 hover:text-white hover:bg-slate-700/50 gap-1"
+                            onClick={() => setCurrentView('sites')}
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                            View
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );

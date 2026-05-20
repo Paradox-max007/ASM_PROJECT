@@ -313,7 +313,7 @@ function EmployeeCombobox({
                     <div className="flex items-center gap-2">
                       <span className="text-sm truncate">{emp.fullName}</span>
                       {emp.isTeamLeader && (
-                        <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px] px-1.5 py-0 shrink-0">
+                        <Badge className="bg-white/15 text-white border-white/25 text-[10px] px-1.5 py-0 shrink-0">
                           <Shield className="h-2.5 w-2.5 mr-0.5" />
                           Leader
                         </Badge>
@@ -483,7 +483,7 @@ function TeamLeaderCombobox({
             variant="outline"
             className="w-full justify-start bg-slate-900 border-slate-600 text-white hover:bg-slate-800 hover:text-white font-normal"
           >
-            <Shield className="h-4 w-4 mr-2 text-blue-400" />
+            <Shield className="h-4 w-4 mr-2 text-white" />
             <span className="truncate">
               {currentTeamLeader.fullName}{' '}
               <span className="text-slate-500 text-xs">({currentTeamLeader.employeeId})</span>
@@ -501,9 +501,9 @@ function TeamLeaderCombobox({
                 >
                   <div className="flex flex-col flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <Shield className="h-3.5 w-3.5 text-blue-400" />
+                      <Shield className="h-3.5 w-3.5 text-white" />
                       <span className="text-sm truncate">{currentTeamLeader.fullName}</span>
-                      <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px] px-1.5 py-0 shrink-0">
+                      <Badge className="bg-white/15 text-white border-white/25 text-[10px] px-1.5 py-0 shrink-0">
                         Leader
                       </Badge>
                     </div>
@@ -579,7 +579,7 @@ function TeamLeaderCombobox({
                     <div className="flex items-center gap-2">
                       <span className="text-sm truncate">{emp.fullName}</span>
                       {emp.isTeamLeader && (
-                        <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px] px-1.5 py-0 shrink-0">
+                        <Badge className="bg-white/15 text-white border-white/25 text-[10px] px-1.5 py-0 shrink-0">
                           <Shield className="h-2.5 w-2.5 mr-0.5" />
                           Leader
                         </Badge>
@@ -639,7 +639,7 @@ function ItemBadges({ itemsStr }: { itemsStr: string }) {
       {activeItems.map((key) => (
         <Badge
           key={key}
-          className="bg-blue-500/15 text-blue-400 border-blue-500/25 text-[11px] px-1.5 py-0"
+          className="bg-white/15 text-white border-white/25 text-[11px] px-1.5 py-0"
         >
           {ITEM_ICONS[key as keyof ItemsMap]} {ITEM_LABELS[key as keyof ItemsMap]}
         </Badge>
@@ -717,6 +717,7 @@ export function UniformRegistryPage() {
 
   // Full-page entry details view
   const [viewingEntryDetails, setViewingEntryDetails] = useState<UniformEntry | null>(null);
+  const [autoOpenAddForm, setAutoOpenAddForm] = useState(false);
 
   // Delete dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -1145,6 +1146,13 @@ export function UniformRegistryPage() {
   /* ── View Details ── */
   const openDetails = useCallback(async (entry: UniformEntry) => {
     setViewingEntryDetails(entry);
+    setAutoOpenAddForm(false);
+  }, []);
+
+  /* ── Add Entry For Employee ── */
+  const openAddForEmployee = useCallback((entry: UniformEntry) => {
+    setViewingEntryDetails(entry);
+    setAutoOpenAddForm(true);
   }, []);
 
   /* ── Delete Entry ── */
@@ -1238,7 +1246,7 @@ export function UniformRegistryPage() {
                 size="icon"
                 className={
                   p === page
-                    ? 'h-8 w-8 bg-blue-500 hover:bg-blue-600 text-white'
+                    ? 'h-8 w-8 bg-white hover:bg-gray-200 text-black font-medium'
                     : 'h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-700'
                 }
                 onClick={() => setPage(p)}
@@ -1277,11 +1285,13 @@ export function UniformRegistryPage() {
     return (
       <UniformEntryDetails
         entry={viewingEntryDetails}
-        onBack={() => setViewingEntryDetails(null)}
+        onBack={() => { setViewingEntryDetails(null); setAutoOpenAddForm(false); }}
         onRenew={(entry) => {
           setViewingEntryDetails(null);
+          setAutoOpenAddForm(false);
           openRenewDialog(entry);
         }}
+        autoOpenAdd={autoOpenAddForm}
       />
     );
   }
@@ -1298,7 +1308,7 @@ export function UniformRegistryPage() {
         </div>
         <Button
           onClick={openCreateDialog}
-          className="bg-blue-500 hover:bg-blue-600 text-white gap-2 self-start"
+          className="bg-white hover:bg-gray-200 text-black gap-2 self-start"
         >
           <Plus className="h-4 w-4" />
           New Entry
@@ -1403,7 +1413,7 @@ export function UniformRegistryPage() {
                         onClick={() => openDetails(entry)}
                       >
                         <TableCell>
-                          <span className="text-sm font-mono text-blue-400 font-semibold">
+                          <span className="text-sm font-mono text-white font-semibold">
                             #{entry.tokenNumber}
                           </span>
                           {entry.isRenewal && (
@@ -1447,7 +1457,7 @@ export function UniformRegistryPage() {
                           <span className="text-sm text-slate-300">
                             {entry.teamLeaderName ? (
                               <span className="flex items-center gap-1">
-                                <Shield className="h-3 w-3 text-blue-400" />
+                                <Shield className="h-3 w-3 text-white" />
                                 {entry.teamLeaderName}
                               </span>
                             ) : (
@@ -1459,10 +1469,10 @@ export function UniformRegistryPage() {
                           <Badge className={cn(
                             'text-[10px] px-1.5 py-0',
                             (entry.recordCount ?? 1) > 1
-                              ? 'bg-blue-500/15 text-blue-400 border-blue-500/25'
+                              ? 'bg-white/15 text-white border-white/25'
                               : 'bg-slate-500/15 text-slate-400 border-slate-500/25'
                           )}>
-                            {entry.recordCount ?? 1}
+                            {entry.recordCount ?? 1} record{(entry.recordCount ?? 1) !== 1 ? 's' : ''}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -1479,7 +1489,16 @@ export function UniformRegistryPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10"
+                              className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-500/10"
+                              onClick={() => openAddForEmployee(entry)}
+                              title="Add Entry"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-500/10"
                               onClick={() => openDetails(entry)}
                               title="View Details"
                             >
@@ -1529,7 +1548,7 @@ export function UniformRegistryPage() {
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-mono text-blue-400 font-semibold">
+                        <span className="text-sm font-mono text-white font-semibold">
                           #{entry.tokenNumber}
                         </span>
                         {entry.isRenewal && (
@@ -1570,16 +1589,32 @@ export function UniformRegistryPage() {
                         <span className="text-slate-500">Created:</span>{' '}
                         <span className="text-slate-300">{formatDate(entry.createdAt)}</span>
                       </div>
-                      <div>
-                        <span className="text-slate-500">Renewal:</span>{' '}
-                        <span className="text-slate-300">{formatDate(entry.renewalDate)}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-slate-500">Records:</span>{' '}
+                        <Badge className={cn(
+                          'text-[10px] px-1.5 py-0',
+                          (entry.recordCount ?? 1) > 1
+                            ? 'bg-white/15 text-white border-white/25'
+                            : 'bg-slate-500/15 text-slate-400 border-slate-500/25'
+                        )}>
+                          {entry.recordCount ?? 1} record{(entry.recordCount ?? 1) !== 1 ? 's' : ''}
+                        </Badge>
                       </div>
                     </div>
                     <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-slate-400 hover:text-blue-400"
+                        className="h-8 w-8 text-slate-400 hover:text-white"
+                        onClick={() => openAddForEmployee(entry)}
+                        title="Add Entry"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-slate-400 hover:text-white"
                         onClick={() => openDetails(entry)}
                       >
                         <Eye className="h-4 w-4" />
@@ -1706,7 +1741,7 @@ export function UniformRegistryPage() {
                       onCheckedChange={(checked) =>
                         setItems((prev) => ({ ...prev, [key]: !!checked }))
                       }
-                      className="border-slate-600 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500"
+                      className="border-slate-600 data-[state=checked]:bg-white data-[state=checked]:border-white data-[state=checked]:text-black"
                     />
                     <label
                       htmlFor={`item-${key}`}
@@ -1781,7 +1816,7 @@ export function UniformRegistryPage() {
             <Button
               onClick={handleCreateEntry}
               disabled={isSubmitting || !selectedEmployee}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
+              className="bg-white hover:bg-gray-200 text-black"
             >
               {isSubmitting ? (
                 <>
@@ -1851,8 +1886,8 @@ export function UniformRegistryPage() {
               {/* Token Number */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10">
-                    <span className="text-lg font-bold text-blue-400">#{viewingEntry.tokenNumber}</span>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10">
+                    <span className="text-lg font-bold text-white">#{viewingEntry.tokenNumber}</span>
                   </div>
                   <div>
                     <h3 className="text-base font-semibold text-white">{viewingEntry.employeeName}</h3>
@@ -1894,7 +1929,7 @@ export function UniformRegistryPage() {
                   <p className="text-sm text-white">
                     {viewingEntry.teamLeaderName ? (
                       <span className="flex items-center gap-1">
-                        <Shield className="h-3.5 w-3.5 text-blue-400" />
+                        <Shield className="h-3.5 w-3.5 text-white" />
                         {viewingEntry.teamLeaderName}
                       </span>
                     ) : (
@@ -1933,7 +1968,7 @@ export function UniformRegistryPage() {
                         className={cn(
                           'flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm',
                           isActive
-                            ? 'bg-blue-500/10 border-blue-500/25 text-blue-400'
+                            ? 'bg-white/10 border-white/25 text-white'
                             : 'bg-slate-700/30 border-slate-700/50 text-slate-500 line-through'
                         )}
                       >

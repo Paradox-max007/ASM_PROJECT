@@ -4,17 +4,8 @@ const fs = require('fs');
 
 console.log('=== ASM Railway Startup ===');
 
-// Step 0: Schema is already postgresql (committed as such), just generate client
-console.log('Schema is already set to postgresql, generating Prisma client...');
-try {
-  execSync('npx prisma generate', { stdio: 'inherit', timeout: 60000 });
-  console.log('Prisma client ready');
-} catch (e) {
-  console.error('Warning: prisma generate failed:', e.message);
-}
-
 // Step 1: Push database schema
-console.log('Pushing database schema to PostgreSQL...');
+console.log('Pushing database schema...');
 try {
   execSync('npx prisma db push --accept-data-loss 2>&1', { stdio: 'inherit', timeout: 120000 });
   console.log('Successfully pushed database schema');
@@ -23,7 +14,16 @@ try {
   console.error('Tables may already exist from a previous deploy.');
 }
 
-// Step 2: Start the Next.js server
+// Step 2: Generate Prisma client
+console.log('Generating Prisma client...');
+try {
+  execSync('npx prisma generate', { stdio: 'inherit', timeout: 60000 });
+  console.log('Prisma client ready');
+} catch (e) {
+  console.error('Warning: prisma generate failed:', e.message);
+}
+
+// Step 3: Start the Next.js server
 const port = process.env.PORT || 3000;
 
 const standalonePath = path.join(__dirname, '.next', 'standalone', 'server.js');

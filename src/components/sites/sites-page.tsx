@@ -253,7 +253,7 @@ function SiteCardsGrid({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-slate-500 hover:text-blue-400 hover:bg-blue-500/10 shrink-0"
+                  className="h-8 w-8 text-slate-500 hover:text-white hover:bg-slate-500/10 shrink-0"
                   onClick={() => onEditSite(site)}
                 >
                   <Pencil className="h-3.5 w-3.5" />
@@ -307,7 +307,7 @@ function SiteCardsGrid({
                 </Button>
                 <Button
                   variant="outline"
-                  className="bg-slate-700/50 border-slate-600 text-slate-200 hover:bg-blue-600 hover:text-white hover:border-blue-600 gap-2 transition-all shrink-0"
+                  className="bg-slate-700/50 border-slate-600 text-slate-200 hover:bg-white hover:text-black hover:border-white gap-2 transition-all shrink-0"
                   onClick={() => onAttendanceSheet(site)}
                   title="Attendance Sheet"
                 >

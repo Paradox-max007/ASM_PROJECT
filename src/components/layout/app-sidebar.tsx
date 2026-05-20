@@ -15,6 +15,8 @@ import {
   FileText,
   Ban,
   Shirt,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,7 +37,7 @@ interface NavItem {
   id: AppView;
   label: string;
   icon: React.ElementType;
-  roles?: UserRole[]; // If specified, only these roles can see it. No roles = everyone can see.
+  roles?: UserRole[]; // If specified, only these roles can see it by default. No roles = everyone can see.
 }
 
 const navItems: NavItem[] = [
@@ -57,9 +59,33 @@ interface SidebarContentProps {
 
 function SidebarContent({ collapsed = false, onNavigate }: SidebarContentProps) {
   const { currentView, setCurrentView } = useAppStore();
-  const { user, logout } = useAuthStore();
+  const { user, logout, updateUser } = useAuthStore();
   const [unreadCount, setUnreadCount] = React.useState(0);
+  const [adminPermissions, setAdminPermissions] = React.useState<string[]>([]);
+  const [isThemeLoading, setIsThemeLoading] = React.useState(false);
 
+  // Determine if we're in dark mode
+  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+
+  // Fetch admin menu permissions
+  React.useEffect(() => {
+    if (!user || user.role === 'super_admin') return;
+
+    const fetchPermissions = async () => {
+      try {
+        const res = await fetch(`/api/menu-permissions?userId=${user.id}`);
+        const data = await res.json();
+        if (data.success) {
+          setAdminPermissions(data.data.allowedMenus || []);
+        }
+      } catch {
+        // silent
+      }
+    };
+    fetchPermissions();
+  }, [user]);
+
+  // Fetch unread notification count
   React.useEffect(() => {
     const fetchCount = async () => {
       try {
@@ -87,30 +113,67 @@ function SidebarContent({ collapsed = false, onNavigate }: SidebarContentProps) 
     onNavigate?.();
   };
 
-  // Simple role-based filtering: admin sees only items without roles restriction
+  const handleThemeToggle = async () => {
+    if (!user || isThemeLoading) return;
+    setIsThemeLoading(true);
+
+    const newTheme = user.theme === 'dark' ? 'light' : 'dark';
+
+    try {
+      const res = await fetch('/api/user/theme', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, theme: newTheme }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        updateUser({ theme: newTheme });
+        if (newTheme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }
+    } catch {
+      // silent
+    } finally {
+      setIsThemeLoading(false);
+    }
+  };
+
+  // Permission-based filtering logic
   const filteredNavItems = navItems.filter((item) => {
-    if (!item.roles) return true; // Everyone can see
-    return item.roles.includes(user?.role as UserRole); // Only specified roles
+    // No roles restriction = everyone can see (dashboard, uniform_registry)
+    if (!item.roles) return true;
+
+    // super_admin sees everything
+    if (user?.role === 'super_admin') return true;
+
+    // admin: check if they have explicit permission for this menu
+    return adminPermissions.includes(item.id);
   });
 
+  const currentTheme = user?.theme || 'dark';
+
   return (
-    <div className="flex h-full flex-col bg-slate-900 border-r border-slate-700/50">
+    <div className="flex h-full flex-col bg-black dark:bg-black light:bg-white border-r border-white/10 dark:border-white/10">
       {/* Logo Section */}
       <div className="flex items-center gap-3 px-4 py-5">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500 font-bold text-white text-lg shrink-0">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white font-bold text-black text-lg shrink-0">
           A
         </div>
         {!collapsed && (
           <div className="flex flex-col min-w-0">
-            <span className="font-bold text-white text-lg leading-tight">ASM</span>
-            <span className="text-xs text-slate-400 truncate">
+            <span className="font-bold text-white dark:text-white text-lg leading-tight">ASM</span>
+            <span className="text-xs text-gray-500 dark:text-gray-500 truncate">
               Arabian Shield Manpower
             </span>
           </div>
         )}
       </div>
 
-      <Separator className="bg-slate-700/50" />
+      <Separator className="bg-white/10 dark:bg-white/10" />
 
       {/* Navigation */}
       <ScrollArea className="flex-1 px-3 py-4">
@@ -124,25 +187,25 @@ function SidebarContent({ collapsed = false, onNavigate }: SidebarContentProps) 
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 w-full text-left',
+                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 w-full text-left relative',
                   collapsed && 'justify-center px-2',
                   isActive
-                    ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30'
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200 border border-transparent'
+                    ? 'bg-white/10 text-white border border-white/20'
+                    : 'text-gray-400 hover:bg-white/5 hover:text-white border border-transparent'
                 )}
               >
-                <Icon className={cn('h-5 w-5 shrink-0', isActive && 'text-blue-400')} />
+                <Icon className={cn('h-5 w-5 shrink-0', isActive && 'text-white')} />
                 {!collapsed && <span className="truncate">{item.label}</span>}
                 {!collapsed && item.id === 'notifications' && unreadCount > 0 && (
                   <Badge
                     variant="default"
-                    className="ml-auto bg-blue-500 text-white text-[10px] px-1.5 py-0 min-w-[20px] h-5 flex items-center justify-center"
+                    className="ml-auto bg-white text-black text-[10px] px-1.5 py-0 min-w-[20px] h-5 flex items-center justify-center"
                   >
                     {unreadCount}
                   </Badge>
                 )}
                 {collapsed && item.id === 'notifications' && unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-[9px] font-bold text-white">
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[9px] font-bold text-black">
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
@@ -152,14 +215,14 @@ function SidebarContent({ collapsed = false, onNavigate }: SidebarContentProps) 
         </nav>
       </ScrollArea>
 
-      <Separator className="bg-slate-700/50" />
+      <Separator className="bg-white/10 dark:bg-white/10" />
 
       {/* User Info Section - Sticky Footer */}
       <div className="p-3 mt-auto">
         {user && (
           <div
             className={cn(
-              'flex items-center gap-3 rounded-lg bg-slate-800/50 p-3',
+              'flex items-center gap-3 rounded-lg bg-white/5 dark:bg-white/5 p-3',
               collapsed && 'justify-center p-2'
             )}
           >
@@ -167,7 +230,7 @@ function SidebarContent({ collapsed = false, onNavigate }: SidebarContentProps) 
               "flex h-9 w-9 items-center justify-center rounded-full font-semibold text-sm shrink-0",
               user.role === 'super_admin'
                 ? 'bg-amber-500/20 text-amber-400'
-                : 'bg-blue-500/20 text-blue-400'
+                : 'bg-white/10 text-white'
             )}>
               {user.name
                 .split(' ')
@@ -177,7 +240,7 @@ function SidebarContent({ collapsed = false, onNavigate }: SidebarContentProps) 
             </div>
             {!collapsed && (
               <div className="flex flex-col min-w-0 flex-1">
-                <span className="text-sm font-medium text-white truncate">
+                <span className="text-sm font-medium text-white dark:text-white truncate">
                   {user.name}
                 </span>
                 <Badge
@@ -186,7 +249,7 @@ function SidebarContent({ collapsed = false, onNavigate }: SidebarContentProps) 
                     "mt-0.5 w-fit text-[10px] px-1.5 py-0 h-4",
                     user.role === 'super_admin'
                       ? 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
-                      : 'bg-slate-700 text-slate-300'
+                      : 'bg-white/10 text-gray-400 border border-white/10'
                   )}
                 >
                   {user.role === 'super_admin' ? (
@@ -196,14 +259,29 @@ function SidebarContent({ collapsed = false, onNavigate }: SidebarContentProps) 
               </div>
             )}
             {!collapsed && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-slate-400 hover:text-red-400 hover:bg-red-500/10 shrink-0"
-                onClick={handleLogout}
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-1 shrink-0">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10 shrink-0"
+                  onClick={handleThemeToggle}
+                  disabled={isThemeLoading}
+                >
+                  {currentTheme === 'dark' ? (
+                    <Sun className="h-4 w-4" />
+                  ) : (
+                    <Moon className="h-4 w-4" />
+                  )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-gray-400 hover:text-red-400 hover:bg-red-500/10 shrink-0"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
             )}
           </div>
         )}
@@ -220,7 +298,7 @@ export function AppSidebar() {
   if (isMobile) {
     return (
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent side="left" className="w-72 p-0 bg-slate-900 border-slate-700/50">
+        <SheetContent side="left" className="w-72 p-0 bg-black border-white/10">
           <SheetHeader className="sr-only">
             <SheetTitle>Navigation Menu</SheetTitle>
           </SheetHeader>
@@ -234,7 +312,7 @@ export function AppSidebar() {
   return (
     <div
       className={cn(
-        'h-screen sticky top-0 flex flex-col transition-all duration-300 border-r border-slate-700/50 bg-slate-900',
+        'h-screen sticky top-0 flex flex-col transition-all duration-300 border-r border-white/10 bg-black',
         sidebarOpen ? 'w-64' : 'w-[72px]'
       )}
     >
@@ -245,7 +323,7 @@ export function AppSidebar() {
         variant="ghost"
         size="icon"
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="absolute -right-3 top-7 z-10 h-6 w-6 rounded-full border border-slate-700 bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 shadow-md"
+        className="absolute -right-3 top-7 z-10 h-6 w-6 rounded-full border border-white/20 bg-black text-gray-400 hover:text-white hover:bg-white/10 shadow-md"
       >
         {sidebarOpen ? (
           <ChevronLeft className="h-3 w-3" />
